@@ -113,7 +113,9 @@ class ApplicationInterface(QWidget):
     def next_image(self):
         self.editor.next_image()
         self.graphics_view.imshow(self.editor.display)
-        self.editor.save()
+        # 每过10张图保存一遍标注文件
+        if (self.editor.image_id + 1) % 10 == 0:
+            self.editor.save()
         self.setWindowTitle(f"{self.editor.image_id+1}/{self.editor.dataset_explorer.get_num_images()}")
 
     def prev_image(self):
