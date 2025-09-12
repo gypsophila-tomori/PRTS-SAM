@@ -101,6 +101,16 @@ class Editor:
         self.du.decrease_transparency()
         self.reset()
 
+    def increase_text_size(self):
+        """增加文字大小"""
+        self.du.increase_text_size()
+        self.reset()
+
+    def decrease_text_size(self):
+        """减小文字大小"""
+        self.du.decrease_text_size()
+        self.reset()
+
     def save_ann(self):
         self.dataset_explorer.add_annotation(
             self.image_id, self.category_id, self.curr_inputs.curr_mask
