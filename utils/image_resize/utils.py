@@ -12,8 +12,8 @@ from queue import Queue
 
 
 def scan_image_files(directory: str,
-                     extensions: List[str] = None,
-                     recursive: bool = True) -> List[str]:
+                    extensions: List[str] = None,
+                    recursive: bool = True) -> List[str]:
     """
     扫描目录中的图片文件
 
@@ -46,8 +46,8 @@ def scan_image_files(directory: str,
 
 
 def create_directory_structure(base_dir: str,
-                               dataset_name: str,
-                               group_size: int = 100) -> Tuple[dict, int]:
+                              dataset_name: str,
+                              group_size: int = 100) -> Tuple[dict, int]:
     """
     创建数据集目录结构
 
@@ -73,27 +73,6 @@ def create_directory_structure(base_dir: str,
     }
 
     return paths, 0  # 组数将在processor中计算
-
-
-def split_files(files: List[str], train_ratio: float = 0.8) -> Tuple[List[str], List[str]]:
-    """
-    将文件列表分割为训练集和验证集
-
-    Args:
-        files: 文件列表
-        train_ratio: 训练集比例
-
-    Returns:
-        (训练集文件, 验证集文件)
-    """
-    if not files:
-        return [], []
-
-    split_index = int(len(files) * train_ratio)
-    train_files = files[:split_index]
-    val_files = files[split_index:]
-
-    return train_files, val_files
 
 
 def create_groups(files: List[str], group_size: int) -> List[List[str]]:

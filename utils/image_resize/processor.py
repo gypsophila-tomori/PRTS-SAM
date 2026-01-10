@@ -13,14 +13,13 @@ from PyQt5 import QtCore
 
 try:
     from PIL import Image
-
     HAS_PIL = True
 except ImportError:
     HAS_PIL = False
     print("警告: Pillow库未安装，图片处理功能将不可用")
 
 from .utils import (
-    scan_image_files, split_files, create_groups,
+    scan_image_files, create_groups,
     format_number, get_image_format, safe_delete_file,
     ProgressTracker
 )
@@ -69,11 +68,16 @@ class ImageProcessor:
 
             self._update_progress(5, f"找到 {len(image_files)} 张图片")
 
-            # 2. 分割训练集和验证集
-            train_files, val_files = split_files(
-                image_files,
-                self.config.get('train_ratio', 0.8)
-            )
+            # 2. 分割训练集和验证集（根据数量）
+            train_count = self.config.get('train_count', 2000)
+
+            # 确保训练集数量不超过总文件数
+            if train_count > len(image_files):
+                train_count = len(image_files)
+                self._update_progress(10, f"训练集数量超过总文件数，已调整为 {train_count}")
+
+            train_files = image_files[:train_count]
+            val_files = image_files[train_count:]
 
             self._update_progress(10, f"分割完成: 训练集 {len(train_files)} 张, 验证集 {len(val_files)} 张")
 
@@ -96,7 +100,7 @@ class ImageProcessor:
             # 4. 处理训练集
             if train_files:
                 success, msg = self._process_file_set(
-                    train_files, train_root, "train", len(image_files), 15, 70
+                    train_files, train_root, "train", len(image_files), 15, 60
                 )
                 if not success:
                     return False, msg
@@ -107,7 +111,7 @@ class ImageProcessor:
             # 5. 处理验证集
             if val_files:
                 success, msg = self._process_file_set(
-                    val_files, val_root, "val", len(image_files), 85, 30
+                    val_files, val_root, "val", len(image_files), 75, 20
                 )
                 if not success:
                     return False, msg
@@ -119,14 +123,14 @@ class ImageProcessor:
             self._update_progress(100, "处理完成")
 
             total_processed = len(train_files) + len(val_files)
-            return True, f"成功处理 {total_processed} 张图片"
+            return True, f"成功处理 {total_processed} 张图片（训练集: {len(train_files)}张, 验证集: {len(val_files)}张）"
 
         except Exception as e:
             return False, f"处理过程中出错: {str(e)}"
 
     def _process_file_set(self, files: List[str], output_root: Path,
-                          prefix: str, total_files: int,
-                          start_progress: int, progress_range: int) -> Tuple[bool, str]:
+                         prefix: str, total_files: int,
+                         start_progress: int, progress_range: int) -> Tuple[bool, str]:
         """处理一组文件（训练集或验证集）"""
         group_size = self.config.get('group_size', 100)
         start_number = self.config.get('start_number', 1)

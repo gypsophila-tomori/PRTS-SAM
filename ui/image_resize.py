@@ -3,10 +3,10 @@
 """
 
 import os
+import sys
 import time
 from pathlib import Path
 from PyQt5 import QtWidgets, QtCore, QtGui
-
 
 class ImageResizeTab(QtWidgets.QWidget):
     """图片批量处理标签页"""
@@ -19,6 +19,7 @@ class ImageResizeTab(QtWidgets.QWidget):
         super().__init__(parent)
         self.is_processing = False
         self.worker_thread = None
+        self.total_files = 0  # 添加总文件数跟踪
         self.setup_ui()
         self.setup_connections()
 
@@ -216,16 +217,18 @@ class ImageResizeTab(QtWidgets.QWidget):
         self.dataset_name_edit = QtWidgets.QLineEdit("ieee_apple_dataset")
         params_layout.addWidget(self.dataset_name_edit, 0, 1)
 
-        params_layout.addWidget(QtWidgets.QLabel("训练集比例:"), 1, 0)
-        self.train_ratio_spin = QtWidgets.QSpinBox()
-        self.train_ratio_spin.setRange(0, 100)
-        self.train_ratio_spin.setValue(80)
-        self.train_ratio_spin.setSuffix("%")
-        params_layout.addWidget(self.train_ratio_spin, 1, 1)
+        # 修改这里：将训练集比例改为训练集数量
+        params_layout.addWidget(QtWidgets.QLabel("训练集数量:"), 1, 0)
+        self.train_count_spin = QtWidgets.QSpinBox()
+        self.train_count_spin.setRange(0, 1000000)
+        self.train_count_spin.setValue(2000)
+        self.train_count_spin.setSuffix("张")
+        self.train_count_spin.valueChanged.connect(self.update_val_info)
+        params_layout.addWidget(self.train_count_spin, 1, 1)
 
-        params_layout.addWidget(QtWidgets.QLabel("验证集比例:"), 2, 0)
-        self.val_ratio_label = QtWidgets.QLabel("20%")
-        params_layout.addWidget(self.val_ratio_label, 2, 1)
+        params_layout.addWidget(QtWidgets.QLabel("验证集数量:"), 2, 0)
+        self.val_count_label = QtWidgets.QLabel("0张")
+        params_layout.addWidget(self.val_count_label, 2, 1)
 
         params_layout.addWidget(QtWidgets.QLabel("每组数量:"), 0, 2)
         self.group_size_spin = QtWidgets.QSpinBox()
@@ -323,11 +326,8 @@ class ImageResizeTab(QtWidgets.QWidget):
 
         # 设置默认值
         self.quality_slider.valueChanged.connect(self.update_quality_label)
-        self.train_ratio_spin.valueChanged.connect(self.update_val_ratio)
         self.width_spin.valueChanged.connect(self.on_width_changed)
         self.height_spin.valueChanged.connect(self.on_height_changed)
-
-        self.update_val_ratio()
 
     def setup_connections(self):
         """设置信号连接"""
@@ -338,11 +338,18 @@ class ImageResizeTab(QtWidgets.QWidget):
         """更新质量标签"""
         self.quality_label.setText(f"{value}% (仅JPEG有效)")
 
-    def update_val_ratio(self):
-        """更新验证集比例显示"""
-        train_ratio = self.train_ratio_spin.value()
-        val_ratio = 100 - train_ratio
-        self.val_ratio_label.setText(f"{val_ratio}%")
+    def update_val_info(self):
+        """更新验证集信息"""
+        train_count = self.train_count_spin.value()
+        if self.total_files > 0:
+            val_count = max(0, self.total_files - train_count)
+            self.val_count_label.setText(f"{val_count}张")
+
+            # 如果训练集数量超过总文件数，显示警告
+            if train_count > self.total_files:
+                self.val_count_label.setStyleSheet("color: #D32F2F; font-weight: bold;")
+            else:
+                self.val_count_label.setStyleSheet("")
 
     def on_width_changed(self, value):
         """宽度变化事件"""
@@ -393,6 +400,9 @@ class ImageResizeTab(QtWidgets.QWidget):
             # 扫描文件
             image_files = scan_image_files(dir_path, extensions, recursive)
 
+            # 更新总文件数
+            self.total_files = len(image_files)
+
             # 计算总大小
             total_size = sum(os.path.getsize(f) for f in image_files if os.path.exists(f))
             size_mb = total_size / (1024 * 1024)
@@ -400,12 +410,22 @@ class ImageResizeTab(QtWidgets.QWidget):
             # 更新文件信息
             if image_files:
                 self.file_info_label.setText(
-                    f"找到 {len(image_files)} 张图片 (总计: {size_mb:.2f}MB)"
+                    f"找到 {self.total_files} 张图片 (总计: {size_mb:.2f}MB)"
                 )
                 self.file_info_label.setStyleSheet("color: #2E7D32; font-weight: bold;")
+
+                # 更新训练集数量最大值
+                self.train_count_spin.setMaximum(self.total_files)
+                if self.train_count_spin.value() > self.total_files:
+                    self.train_count_spin.setValue(self.total_files)
+
+                # 更新验证集信息
+                self.update_val_info()
             else:
                 self.file_info_label.setText("未找到符合条件的图片文件")
                 self.file_info_label.setStyleSheet("color: #D32F2F;")
+                self.train_count_spin.setMaximum(0)
+                self.val_count_label.setText("0张")
 
         except Exception as e:
             self.file_info_label.setText(f"扫描目录时出错: {str(e)}")
@@ -422,7 +442,7 @@ class ImageResizeTab(QtWidgets.QWidget):
 
             # 缩放设置
             'mode': 'aspect' if self.mode_aspect.isChecked() else
-            'stretch' if self.mode_stretch.isChecked() else 'crop',
+                   'stretch' if self.mode_stretch.isChecked() else 'crop',
             'target_width': self.width_spin.value(),
             'target_height': self.height_spin.value(),
             'keep_original_format': self.keep_original.isChecked(),
@@ -432,7 +452,7 @@ class ImageResizeTab(QtWidgets.QWidget):
             # 输出设置
             'output_dir': self.output_dir_edit.text(),
             'dataset_name': self.dataset_name_edit.text(),
-            'train_ratio': self.train_ratio_spin.value() / 100.0,
+            'train_count': self.train_count_spin.value(),  # 改为训练集数量
             'group_size': self.group_size_spin.value(),
             'start_number': self.start_number_spin.value(),
             'number_digits': self.number_digits_spin.value(),
@@ -470,6 +490,11 @@ class ImageResizeTab(QtWidgets.QWidget):
             QtWidgets.QMessageBox.warning(self, "警告", "请输入数据集名称")
             return False
 
+        # 检查训练集数量
+        if config['train_count'] <= 0:
+            QtWidgets.QMessageBox.warning(self, "警告", "训练集数量必须大于0")
+            return False
+
         return True
 
     def start_processing(self):
@@ -478,6 +503,16 @@ class ImageResizeTab(QtWidgets.QWidget):
             return
 
         if not self.validate_config():
+            return
+
+        # 检查训练集数量是否超过总文件数
+        config = self.get_config()
+        if self.total_files > 0 and config['train_count'] > self.total_files:
+            QtWidgets.QMessageBox.warning(
+                self,
+                "警告",
+                f"训练集数量({config['train_count']})超过总文件数({self.total_files})"
+            )
             return
 
         # 禁用开始按钮，启用停止按钮
@@ -491,7 +526,6 @@ class ImageResizeTab(QtWidgets.QWidget):
 
         # 创建工作线程
         from utils.image_resize.processor import ImageProcessorThread
-        config = self.get_config()
 
         self.worker_thread = ImageProcessorThread(config)
         self.worker_thread.progress_updated.connect(self.progress_updated)
@@ -528,12 +562,12 @@ class ImageResizeTab(QtWidgets.QWidget):
                 )
                 if os.path.exists(output_path):
                     try:
-                        import subprocess
                         if os.name == 'nt':  # Windows
                             os.startfile(output_path)
                         elif os.name == 'posix':  # macOS, Linux
+                            import subprocess
                             subprocess.call(['open', output_path] if sys.platform == 'darwin'
-                                            else ['xdg-open', output_path])
+                                          else ['xdg-open', output_path])
                     except Exception as e:
                         print(f"无法打开目录: {e}")
 
