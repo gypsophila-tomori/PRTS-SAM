@@ -6,7 +6,6 @@ import os
 from pathlib import Path
 from PyQt5 import QtWidgets, QtCore, QtGui
 
-
 class SAMEmbeddingsTab(QtWidgets.QWidget):
     """SAM嵌入向量生成标签页"""
 
@@ -88,10 +87,10 @@ class SAMEmbeddingsTab(QtWidgets.QWidget):
 
         # 数据集目录选择
         dataset_dir_layout = QtWidgets.QHBoxLayout()
-        dataset_dir_layout.addWidget(QtWidgets.QLabel("数据集目录:"))
+        dataset_dir_layout.addWidget(QtWidgets.QLabel("根目录:"))
 
         self.dataset_dir_edit = QtWidgets.QLineEdit()
-        self.dataset_dir_edit.setPlaceholderText("选择包含images子目录的数据集目录")
+        self.dataset_dir_edit.setPlaceholderText("选择数据集根目录")
         dataset_dir_layout.addWidget(self.dataset_dir_edit)
 
         self.browse_dataset_btn = QtWidgets.QPushButton("浏览...")
@@ -100,12 +99,25 @@ class SAMEmbeddingsTab(QtWidgets.QWidget):
 
         dataset_layout.addLayout(dataset_dir_layout)
 
+        # 扫描模式选择
+        mode_layout = QtWidgets.QHBoxLayout()
+        mode_layout.addWidget(QtWidgets.QLabel("扫描模式:"))
+
+        self.scan_mode_combo = QtWidgets.QComboBox()
+        self.scan_mode_combo.addItems(["传统模式", "分组模式"])
+        self.scan_mode_combo.setToolTip("传统模式: 只处理根目录下的images文件夹\n分组模式: 递归扫描所有子文件夹中的images文件夹")
+        mode_layout.addWidget(self.scan_mode_combo)
+
+        mode_layout.addStretch()
+        dataset_layout.addLayout(mode_layout)
+
         # 目录结构说明
         dir_structure_label = QtWidgets.QLabel("目录结构说明:")
         dir_structure_label.setStyleSheet("font-weight: bold;")
         dataset_layout.addWidget(dir_structure_label)
 
-        structure_text = """数据集目录/
+        structure_text = """传统模式（处理单个images文件夹）:
+根目录/
 ├── images/          # 图片目录（必需）
 │   ├── image1.jpg
 │   ├── image2.png
@@ -113,17 +125,30 @@ class SAMEmbeddingsTab(QtWidgets.QWidget):
 └── embeddings/      # 输出目录（自动创建）
     ├── image1.npy
     ├── image2.npy
-    └── ..."""
+    └── ...
+
+分组模式（处理多个images子文件夹）:
+根目录/
+├── train_001/
+│   ├── images/     # 图片目录
+│   │   ├── train_00001.png
+│   │   └── ...
+│   └── embeddings/ # 输出目录（自动创建）
+├── train_002/
+│   ├── images/
+│   └── embeddings/
+└── ..."""
 
         self.structure_text = QtWidgets.QTextEdit()
         self.structure_text.setPlainText(structure_text)
-        self.structure_text.setMaximumHeight(150)
+        self.structure_text.setMaximumHeight(180)
         self.structure_text.setReadOnly(True)
         self.structure_text.setStyleSheet("""
             QTextEdit {
                 background-color: #f5f5f5;
                 border: 1px solid #ddd;
                 font-family: monospace;
+                font-size: 10pt;
             }
         """)
         dataset_layout.addWidget(self.structure_text)
@@ -202,7 +227,7 @@ class SAMEmbeddingsTab(QtWidgets.QWidget):
     def browse_dataset_dir(self):
         """浏览数据集目录"""
         dir_path = QtWidgets.QFileDialog.getExistingDirectory(
-            self, "选择数据集目录",
+            self, "选择数据集根目录",
             str(Path.home())
         )
         if dir_path:
@@ -214,7 +239,8 @@ class SAMEmbeddingsTab(QtWidgets.QWidget):
             'checkpoint_path': self.weight_path_edit.text(),
             'model_type': self.model_type_combo.currentText(),
             'device': self.device_combo.currentText(),
-            'dataset_folder': self.dataset_dir_edit.text(),
+            'dataset_root': self.dataset_dir_edit.text(),
+            'scan_mode': self.scan_mode_combo.currentText(),  # "传统模式" 或 "分组模式"
         }
         return config
 
@@ -231,19 +257,13 @@ class SAMEmbeddingsTab(QtWidgets.QWidget):
             QtWidgets.QMessageBox.warning(self, "警告", "权重文件不存在")
             return False
 
-        # 检查数据集目录
-        if not config['dataset_folder']:
-            QtWidgets.QMessageBox.warning(self, "警告", "请选择数据集目录")
+        # 检查根目录
+        if not config['dataset_root']:
+            QtWidgets.QMessageBox.warning(self, "警告", "请选择数据集根目录")
             return False
 
-        if not os.path.exists(config['dataset_folder']):
-            QtWidgets.QMessageBox.warning(self, "警告", "数据集目录不存在")
-            return False
-
-        # 检查images子目录
-        images_folder = os.path.join(config['dataset_folder'], "images")
-        if not os.path.exists(images_folder):
-            QtWidgets.QMessageBox.warning(self, "警告", f"数据集目录下没有找到images子目录: {images_folder}")
+        if not os.path.exists(config['dataset_root']):
+            QtWidgets.QMessageBox.warning(self, "警告", "数据集根目录不存在")
             return False
 
         return True
@@ -262,7 +282,7 @@ class SAMEmbeddingsTab(QtWidgets.QWidget):
         self.stop_btn.setEnabled(True)
 
         # 更新状态
-        self.status_label.setText("正在加载模型...")
+        self.status_label.setText("正在扫描目录结构...")
         self.progress_bar.setValue(0)
 
         # 创建工作线程
