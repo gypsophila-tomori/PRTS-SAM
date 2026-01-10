@@ -7,8 +7,7 @@ import sys
 import time
 import threading
 from pathlib import Path
-from queue import Queue, Empty
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Tuple
 from PyQt5 import QtCore
 
 try:
@@ -20,8 +19,7 @@ except ImportError:
 
 from .utils import (
     scan_image_files, create_groups,
-    format_number, get_image_format, safe_delete_file,
-    ProgressTracker
+    format_number
 )
 
 
@@ -51,20 +49,11 @@ class ImageProcessor:
             # 1. 扫描图片文件
             self._update_progress(0, "正在扫描图片文件...")
 
-            extensions = []
-            if self.config.get('filter_png', True):
-                extensions.append('.png')
-            if self.config.get('filter_jpg', True):
-                extensions.extend(['.jpg', '.jpeg'])
-
-            image_files = scan_image_files(
-                self.config['input_dir'],
-                extensions,
-                self.config.get('recursive', True)
-            )
+            # 直接使用默认设置扫描所有常见图片格式
+            image_files = scan_image_files(self.config['input_dir'])
 
             if not image_files:
-                return False, "未找到符合条件的图片文件"
+                return False, "未找到图片文件"
 
             self._update_progress(5, f"找到 {len(image_files)} 张图片")
 

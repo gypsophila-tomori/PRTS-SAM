@@ -3,11 +3,10 @@
 """
 
 from .processor import ImageProcessor, ImageProcessorThread
-from .utils import scan_image_files, create_directory_structure
+from .utils import scan_image_files
 
 __all__ = [
     'ImageProcessor',
     'ImageProcessorThread',
     'scan_image_files',
-    'create_directory_structure',
 ]

@@ -58,22 +58,6 @@ class ImageResizeTab(QtWidgets.QWidget):
 
         input_layout.addLayout(dir_layout)
 
-        # 文件过滤选项
-        filter_layout = QtWidgets.QHBoxLayout()
-        filter_layout.addWidget(QtWidgets.QLabel("文件过滤:"))
-
-        self.filter_png = QtWidgets.QCheckBox("仅PNG")
-        self.filter_jpg = QtWidgets.QCheckBox("仅JPG")
-        self.filter_subdir = QtWidgets.QCheckBox("包含子目录")
-        self.filter_subdir.setChecked(True)
-
-        filter_layout.addWidget(self.filter_png)
-        filter_layout.addWidget(self.filter_jpg)
-        filter_layout.addWidget(self.filter_subdir)
-        filter_layout.addStretch()
-
-        input_layout.addLayout(filter_layout)
-
         # 文件统计信息
         self.file_info_label = QtWidgets.QLabel("请选择目录以查看文件信息")
         self.file_info_label.setStyleSheet("color: #666; font-style: italic;")
@@ -388,17 +372,8 @@ class ImageResizeTab(QtWidgets.QWidget):
         try:
             from utils.image_resize.utils import scan_image_files
 
-            # 获取过滤选项
-            extensions = []
-            if self.filter_png.isChecked():
-                extensions.append('.png')
-            if self.filter_jpg.isChecked():
-                extensions.extend(['.jpg', '.jpeg'])
-
-            recursive = self.filter_subdir.isChecked()
-
-            # 扫描文件
-            image_files = scan_image_files(dir_path, extensions, recursive)
+            # 直接使用默认设置扫描所有常见图片格式
+            image_files = scan_image_files(dir_path)
 
             # 更新总文件数
             self.total_files = len(image_files)
@@ -422,7 +397,7 @@ class ImageResizeTab(QtWidgets.QWidget):
                 # 更新验证集信息
                 self.update_val_info()
             else:
-                self.file_info_label.setText("未找到符合条件的图片文件")
+                self.file_info_label.setText("未找到图片文件")
                 self.file_info_label.setStyleSheet("color: #D32F2F;")
                 self.train_count_spin.setMaximum(0)
                 self.val_count_label.setText("0张")
@@ -436,9 +411,6 @@ class ImageResizeTab(QtWidgets.QWidget):
         config = {
             # 输入设置
             'input_dir': self.input_dir_edit.text(),
-            'filter_png': self.filter_png.isChecked(),
-            'filter_jpg': self.filter_jpg.isChecked(),
-            'recursive': self.filter_subdir.isChecked(),
 
             # 缩放设置
             'mode': 'aspect' if self.mode_aspect.isChecked() else
@@ -473,11 +445,6 @@ class ImageResizeTab(QtWidgets.QWidget):
         # 检查输出目录
         if not config['output_dir']:
             QtWidgets.QMessageBox.warning(self, "警告", "请输入输出目录")
-            return False
-
-        # 检查至少选择一种图片格式
-        if not config['filter_png'] and not config['filter_jpg']:
-            QtWidgets.QMessageBox.warning(self, "警告", "请至少选择一种图片格式")
             return False
 
         # 检查目标尺寸
