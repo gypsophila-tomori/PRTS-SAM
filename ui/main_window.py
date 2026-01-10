@@ -127,6 +127,14 @@ class MainWindow(QtWidgets.QMainWindow):
                 print(f"无法加载SAM嵌入向量标签页: {e}")
 
         try:
+            from ui.onnx_export import ONNXExportTab
+            self.onnx_export_tab = ONNXExportTab()
+            self.tab_widget.addTab(self.onnx_export_tab, "⚡ ONNX导出")
+        except ImportError as e:
+            if self.debug:
+                print(f"无法加载ONNX导出标签页: {e}")
+
+        try:
             # 原有的SAM标注工具
             from ui.sam_annotator import SAMAnnotatorTab
             self.sam_tab = SAMAnnotatorTab()
@@ -207,7 +215,7 @@ class MainWindow(QtWidgets.QMainWindow):
         <h1>PRTS-SAM 工具套件</h1>
         <p>版本: 1.0.0</p>
         <p>基于 Meta AI 的 Segment Anything Model</p>
-        <p>提供图片处理、SAM嵌入向量生成、SAM标注等功能</p>
+        <p>提供图片处理、SAM嵌入向量生成、ONNX模型导出等功能</p>
         <hr>
         <p>© 2024 PRTS 实验室</p>
         """
