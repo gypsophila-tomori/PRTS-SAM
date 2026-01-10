@@ -130,6 +130,6 @@ dmypy.json
 
 # Models
 .onnx
-
+weights/
 # Dataset
 dataset/

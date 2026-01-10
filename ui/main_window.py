@@ -7,7 +7,6 @@ import json
 from pathlib import Path
 from PyQt5 import QtWidgets, QtCore, QtGui
 
-
 class MainWindow(QtWidgets.QMainWindow):
     """主窗口类"""
 
@@ -26,7 +25,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def setup_ui(self):
         """设置UI"""
-        self.setWindowTitle("PRTS-SAM")
+        self.setWindowTitle("PRTS-SAM 工具套件")
         self.resize(1200, 800)
 
         # 设置窗口图标
@@ -120,6 +119,14 @@ class MainWindow(QtWidgets.QMainWindow):
                 print(f"无法加载图片处理标签页: {e}")
 
         try:
+            from ui.sam_embeddings import SAMEmbeddingsTab
+            self.sam_embeddings_tab = SAMEmbeddingsTab()
+            self.tab_widget.addTab(self.sam_embeddings_tab, "🧠 SAM嵌入向量")
+        except ImportError as e:
+            if self.debug:
+                print(f"无法加载SAM嵌入向量标签页: {e}")
+
+        try:
             # 原有的SAM标注工具
             from ui.sam_annotator import SAMAnnotatorTab
             self.sam_tab = SAMAnnotatorTab()
@@ -198,11 +205,11 @@ class MainWindow(QtWidgets.QMainWindow):
         """显示关于对话框"""
         about_text = """
         <h1>PRTS-SAM 工具套件</h1>
-        <p>版本: 0.0.1 alpha</p>
+        <p>版本: 1.0.0</p>
         <p>基于 Meta AI 的 Segment Anything Model</p>
-        <p>提供图片处理、SAM标注等功能</p>
+        <p>提供图片处理、SAM嵌入向量生成、SAM标注等功能</p>
         <hr>
-        <p>© Tomori </p>
+        <p>© 2024 PRTS 实验室</p>
         """
         QtWidgets.QMessageBox.about(self, "关于 PRTS-SAM", about_text)
 
