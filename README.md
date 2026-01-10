@@ -1,5 +1,5 @@
-# SAM-Labelimg
-利用Segment Anything(SAM)模型进行快速标注
+# PRTS-SAM
+Point-click Region Tracking Software,利用Segment Anything(SAM)模型进行快速标注
 
 #### 1.下载项目
 
