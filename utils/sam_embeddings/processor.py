@@ -6,8 +6,9 @@ import os
 import sys
 import cv2
 import numpy as np
+import time
 from pathlib import Path
-from typing import Dict, List, Tuple, Generator
+from typing import Dict, List, Tuple
 from PyQt5 import QtCore
 
 # 尝试导入SAM库
@@ -95,7 +96,8 @@ class SAMEmbeddingsProcessor:
         return total
 
     def process_images_folder(self, images_folder: str, embeddings_folder: str,
-                            predictor, processed_count: int, total_images: int) -> Tuple[int, bool]:
+                            predictor, start_time: float, processed_count: int,
+                            total_images: int) -> Tuple[int, bool]:
         """
         处理单个images文件夹
 
@@ -121,11 +123,6 @@ class SAMEmbeddingsProcessor:
             if self.should_stop:
                 return processed_count, True
 
-            # 更新进度
-            progress = 5 + int((processed_count / total_images) * 90)
-            folder_display = folder_name if folder_name != "" else "根目录"
-            self._update_progress(progress, f"正在处理 [{folder_display}]: {image_name}")
-
             try:
                 # 读取图片
                 image_path = os.path.join(images_folder, image_name)
@@ -149,6 +146,38 @@ class SAMEmbeddingsProcessor:
                 np.save(out_path, image_embedding)
 
                 processed_count += 1
+
+                # 计算进度和剩余时间
+                current_time = time.time()
+                elapsed_time = current_time - start_time
+                progress_percentage = int((processed_count / total_images) * 95) + 5
+
+                if processed_count > 0:
+                    # 计算平均每张图片处理时间
+                    avg_time_per_image = elapsed_time / processed_count
+                    remaining_images = total_images - processed_count
+                    remaining_time_seconds = avg_time_per_image * remaining_images
+
+                    # 格式化剩余时间
+                    if remaining_time_seconds < 60:
+                        remaining_time_str = f"{int(remaining_time_seconds)}秒"
+                    elif remaining_time_seconds < 3600:
+                        minutes = int(remaining_time_seconds // 60)
+                        seconds = int(remaining_time_seconds % 60)
+                        remaining_time_str = f"{minutes}分{seconds}秒"
+                    else:
+                        hours = int(remaining_time_seconds // 3600)
+                        minutes = int((remaining_time_seconds % 3600) // 60)
+                        remaining_time_str = f"{hours}小时{minutes}分"
+
+                    # 更新进度
+                    folder_display = folder_name if folder_name != "" else "根目录"
+                    message = f"正在处理 [{folder_display}]: {image_name} ({processed_count}/{total_images}, 剩余约{remaining_time_str})"
+                else:
+                    folder_display = folder_name if folder_name != "" else "根目录"
+                    message = f"正在处理 [{folder_display}]: {image_name} ({processed_count}/{total_images})"
+
+                self._update_progress(progress_percentage, message)
 
             except Exception as e:
                 print(f"处理图片 {image_name} 时出错: {str(e)}")
@@ -193,7 +222,8 @@ class SAMEmbeddingsProcessor:
             except Exception as e:
                 return False, f"加载SAM模型失败: {str(e)}"
 
-            # 4. 处理每个images文件夹
+            # 4. 记录开始时间并处理每个images文件夹
+            start_time = time.time()
             processed_count = 0
             folders_processed = 0
 
@@ -211,14 +241,27 @@ class SAMEmbeddingsProcessor:
 
                 # 处理当前文件夹
                 processed_count, stopped = self.process_images_folder(
-                    images_folder, embeddings_folder, predictor, processed_count, total_images
+                    images_folder, embeddings_folder, predictor,
+                    start_time, processed_count, total_images
                 )
 
                 if stopped:
                     return False, "处理被用户中断"
 
             # 5. 完成
-            self._update_progress(100, "处理完成")
+            total_time = time.time() - start_time
+            if total_time < 60:
+                total_time_str = f"{int(total_time)}秒"
+            elif total_time < 3600:
+                minutes = int(total_time // 60)
+                seconds = int(total_time % 60)
+                total_time_str = f"{minutes}分{seconds}秒"
+            else:
+                hours = int(total_time // 3600)
+                minutes = int((total_time % 3600) // 60)
+                total_time_str = f"{hours}小时{minutes}分"
+
+            self._update_progress(100, f"处理完成，共耗时{total_time_str}")
 
             return True, f"成功处理 {processed_count}/{total_images} 张图片，来自 {len(images_folders)} 个文件夹"
 
