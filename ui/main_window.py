@@ -26,7 +26,7 @@ class MainWindow(QtWidgets.QMainWindow):
     def setup_ui(self):
         """设置UI"""
         self.setWindowTitle("PRTS-SAM 工具套件")
-        self.resize(1200, 800)
+        self.resize(1400, 900)  # 增加窗口大小以适应标注界面
 
         # 设置窗口图标
         icon_path = Path(__file__).parent.parent / "assets" / "icon.png"
@@ -135,10 +135,9 @@ class MainWindow(QtWidgets.QMainWindow):
                 print(f"无法加载ONNX导出标签页: {e}")
 
         try:
-            # 原有的SAM标注工具
             from ui.sam_annotator import SAMAnnotatorTab
-            self.sam_tab = SAMAnnotatorTab()
-            self.tab_widget.addTab(self.sam_tab, "🎯 SAM标注")
+            self.sam_annotator_tab = SAMAnnotatorTab()
+            self.tab_widget.addTab(self.sam_annotator_tab, "🎯 SAM标注")
         except ImportError as e:
             if self.debug:
                 print(f"无法加载SAM标注标签页: {e}")
@@ -215,7 +214,7 @@ class MainWindow(QtWidgets.QMainWindow):
         <h1>PRTS-SAM 工具套件</h1>
         <p>版本: 1.0.0</p>
         <p>基于 Meta AI 的 Segment Anything Model</p>
-        <p>提供图片处理、SAM嵌入向量生成、ONNX模型导出等功能</p>
+        <p>提供图片处理、SAM嵌入向量生成、ONNX模型导出、交互式标注等功能</p>
         <hr>
         <p>© 2024 PRTS 实验室</p>
         """
