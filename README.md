@@ -33,7 +33,7 @@
 
 ### 🧠 SAM 嵌入向量生成工具
 - 支持传统模式和分组模式扫描
-- 递归处理子文件夹中的 images 目录
+- 分组模式扫描时递归处理子文件夹中的 images 目录
 - 实时进度显示和剩余时间预估
 - 自动创建 embeddings 目录结构
 
@@ -44,30 +44,48 @@
 - 分阶段进度显示
 
 ### 🎯 SAM 标注工具
-- 基于原SAM-Tool的交互式标注功能
+- 基于原SAM-Tool/salt的交互式标注功能
 - 支持前景/背景点标注
 - 实时掩码预测和调整
 - 完整的快捷键支持
+
+### 界面展示
+![imazge_resize](asset\image_resize.png)
+
+![embedding](asset\embedding.png)
+
+![onnx_explorer](asset\onnx_explorer.png)
+
+![sam_annotator](asset\sam_annotator.png)
 
 ## 🛠️ 安装
 
 ### 环境要求
 
 - Python 3.8+
-- PyTorch 1.12+ (推荐 2.0+)
-- 支持 CUDA 的显卡（可选，但推荐）
+- PyTorch 1.12+ (推荐 1.12.1)
+- 支持 CUDA 的显卡（可选，但推荐，一张RTX 3050 4G Laptop就行，问就是我的配置）
 
 ### 安装步骤
 
 ```bash
-# 1. 克隆本项目
+# 1.新建虚拟环境并安装pytorch
+conda env create -f environment.yml -n myenv
+conda activate myenv
+
+2.安装segment_anything
+mkdir your_ws
+cd your_ws
+git clone https://github.com/facebookresearch/segment-anything.git
+cd segment-anything
+pip install -e .
+
+# 2. 克隆本项目
+cd your_ws
 git clone https://github.com/你的用户名/PRTS-SAM.git
 cd PRTS-SAM
 
-# 2. 安装依赖
-pip install -r requirements.txt
-
-# 3. 下载 SAM 模型权重（选一个）
+# 4. 下载 SAM 模型权重（选一个）
 # vit_h 版本（2.4GB）
 wget https://dl.fbaipublicfiles.com/segment_anything/sam_vit_h_4b8939.pth
 
@@ -191,12 +209,6 @@ dataset/ieee_apple_dataset/
 4. **显存要求**：大模型（如vit_h）需要较多显存，如遇内存不足可尝试使用vit_b或vit_l模型
 5. **备份标注**：标注过程中建议定期使用Ctrl+S保存，程序也会每10张图片自动保存一次
 
-## 🔧 配置说明
-
-程序会自动保存用户设置到 `~/.prts_sam_config.json`，包括：
-- 最近使用的目录路径
-- 各工具的默认参数设置
-- 窗口布局和状态
 
 ## 🤝 致谢
 
@@ -207,7 +219,8 @@ dataset/ieee_apple_dataset/
 
 ## 📄 License
 
-MIT License - 随便用，但用出问题别找我
+MIT License
+这个项目是为我自己的毕设开发的小工具，可能不怎么会更新
 
 ---
 

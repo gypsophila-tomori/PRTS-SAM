@@ -208,7 +208,7 @@ class MainWindow(QtWidgets.QMainWindow):
         <p>基于 Meta AI 的 Segment Anything Model</p>
         <p>提供图片处理、SAM嵌入向量生成、ONNX模型导出、交互式标注等功能</p>
         <hr>
-        <p>© 2024 PRTS 实验室</p>
+        <p>© 2026 Tomori</p>
         """
         QtWidgets.QMessageBox.about(self, "关于 PRTS-SAM", about_text)
 
