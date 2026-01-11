@@ -63,13 +63,7 @@ class MainWindow(QtWidgets.QMainWindow):
         # 文件菜单
         file_menu = menubar.addMenu("文件")
 
-        new_action = QtWidgets.QAction("新建项目", self)
-        new_action.setShortcut("Ctrl+N")
-        file_menu.addAction(new_action)
-
-        open_action = QtWidgets.QAction("打开项目", self)
-        open_action.setShortcut("Ctrl+O")
-        file_menu.addAction(open_action)
+        # 删除：new_action, open_action
 
         file_menu.addSeparator()
 
@@ -142,9 +136,7 @@ class MainWindow(QtWidgets.QMainWindow):
             if self.debug:
                 print(f"无法加载SAM标注标签页: {e}")
 
-        # 添加更多标签页的占位
-        self.tab_widget.addTab(QtWidgets.QWidget(), "📊 批量处理")
-        self.tab_widget.addTab(QtWidgets.QWidget(), "⚙️ 设置")
+        # 删除：多余的批量处理和设置标签页
 
     def refresh_tabs(self):
         """刷新标签页"""

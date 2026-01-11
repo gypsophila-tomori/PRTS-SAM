@@ -2,25 +2,26 @@
 
 利用 Segment Anything (SAM) 模型进行快速标注的集成工具套件
 
-![Python](https://img.shields.io/badge/Python-3.10+-blue.svg)
+![Python](https://img.shields.io/badge/Python-3.8-blue.svg)
+![Pytroch](https://img.shields.io/badge/Pytorch-1.12.1-orange.svg)
 ![PyQt5](https://img.shields.io/badge/PyQt5-GUI-green.svg)
 ![SAM](https://img.shields.io/badge/SAM-Meta-purple.svg)
 ![License](https://img.shields.io/badge/License-MIT-yellow.svg)
 
 ## 🤔 这是什么？
 
-这是一个基于 **Meta Segment Anything Model (SAM)** 的**图像处理与标注工具套件**，集成了数据处理、嵌入向量生成、模型导出和标注功能。
+这是一个基于 **Meta Segment Anything Model (SAM)** 的**一体化图像处理与标注工具套件**，集成了原SAM-Tool和segment-anything项目的核心功能，提供完整的GUI界面，无需命令行操作。
 
-**核心特点**：一站式解决 SAM 相关任务，从数据预处理到模型部署，再到交互式标注
+**核心特点**：一站式解决SAM相关任务，从数据预处理到模型部署，再到交互式标注
 
 ## ✨ 特性
 
 - 📊 **数据预处理**：批量图片缩放、格式转换、数据集划分和分组存储
 - 🧠 **嵌入向量预计算**：批量生成图像嵌入向量，加速后续标注
 - ⚡ **ONNX 模型导出**：将 SAM 模型转换为 ONNX 格式，支持量化优化
-- 🖱️ **交互式标注**：点几下鼠标，SAM 帮你找出目标（待集成）
-- 🔧 **模块化设计**：每个功能独立，可按需使用
-- 💾 **配置持久化**：自动保存用户设置和偏好
+- 🖱️ **交互式标注**：点几下鼠标，SAM 帮你找出目标，打上掩膜
+- 🔧 **一体化界面**：所有功能集成在一个GUI中，无需切换工具
+- 💾 **COCO 格式输出**：兼容 MMDetection、Detectron2 等主流框架
 
 ## 🏗️ 工具套件
 
@@ -42,28 +43,11 @@
 - 动态形状支持（可变点数输入）
 - 分阶段进度显示
 
-### 🎯 SAM 标注工具（待集成）
-- 基于原 salt 项目的交互式标注功能
+### 🎯 SAM 标注工具
+- 基于原SAM-Tool的交互式标注功能
 - 支持前景/背景点标注
 - 实时掩码预测和调整
-
-## 📸 界面概览
-
-```
-┌─────────────────────────────────────────────────────────────┐
-│  PRTS-SAM 工具套件 v1.0                                     │
-├─────────────────────────────────────────────────────────────┤
-│  ┌─────────────────────────────────────────────────────┐    │
-│  │  📷 图片处理  🧠 SAM嵌入向量  ⚡ ONNX导出  🎯 SAM标注 │    │
-│  └─────────────────────────────────────────────────────┘    │
-│                                                             │
-│  1. 图片处理：输入 → 缩放 → 输出 → 开始处理                │
-│  2. 嵌入向量：模型设置 → 数据集设置 → 开始生成             │
-│  3. ONNX导出：输入设置 → 输出设置 → 开始导出              │
-│  4. SAM标注：加载模型 → 选择图片 → 交互标注 → 保存        │
-│                                                             │
-└─────────────────────────────────────────────────────────────┘
-```
+- 完整的快捷键支持
 
 ## 🛠️ 安装
 
@@ -92,6 +76,8 @@ wget https://dl.fbaipublicfiles.com/segment_anything/sam_vit_l_0b3195.pth
 
 # vit_b 版本（375MB）
 wget https://dl.fbaipublicfiles.com/segment_anything/sam_vit_b_01ec64.pth
+
+# 将下载的权重文件放在 weights/ 目录下
 ```
 
 ## 🚀 使用方法
@@ -101,133 +87,134 @@ wget https://dl.fbaipublicfiles.com/segment_anything/sam_vit_b_01ec64.pth
 python main.py
 ```
 
-### 三步式工作流程
+### 完整工作流程
 
 #### 1. 数据准备（图片处理工具）
+- 选择原始图片目录
+- 设置缩放参数（模式、尺寸、格式）
+- 配置输出结构（训练集/验证集划分、分组大小）
+- 点击"开始处理"生成标准化数据集
+
+#### 2. 嵌入向量预计算（嵌入向量工具）
+- 选择数据集根目录
+- 选择SAM模型权重和类型
+- 选择扫描模式（传统模式或分组模式）
+- 点击"开始生成"预计算所有图片的嵌入向量
+
+#### 3. 模型导出（ONNX 导出工具）
+- 选择PyTorch模型权重
+- 设置输出路径和参数（图像尺寸、ONNX版本、是否量化）
+- 点击"开始导出"生成ONNX推理模型
+
+#### 4. 交互式标注（SAM 标注工具）
+- 选择ONNX模型文件
+- 选择数据集目录（包含images和embeddings）
+- 输入类别标签（逗号分隔）
+- 点击"开始标注"进入标注界面
+
+### 标注快捷键
+
+| 快捷键 | 功能 | 备注 |
+|--------|------|------|
+| 左键 | 添加前景点 | 绿色的点 |
+| 右键 | 添加背景点 | 红色的点 |
+| `A` / `←` | 上一张图片 | |
+| `D` / `→` | 下一张图片 | |
+| `R` | 重置当前点击点 | |
+| `N` | 添加对象（确认掩码） | |
+| `Ctrl+Z` | 撤销上一个对象 | |
+| `Ctrl+S` | 保存所有标注 | |
+| `K` | 调低透明度 | |
+| `L` | 调高透明度 | |
+| `Esc` | 退出标注界面 | |
+
+## 📁 项目结构
+
 ```
-选择图片目录 → 设置缩放参数 → 配置输出 → 开始处理
+PRTS-SAM/
+├── main.py                 # 程序主入口
+├── ui/                     # 用户界面
+│   ├── main_window.py      # 主窗口
+│   ├── image_resize.py     # 图片处理界面
+│   ├── sam_embeddings.py   # 嵌入向量界面
+│   ├── onnx_export.py      # ONNX导出界面
+│   └── sam_annotator.py    # 标注界面
+├── utils/                  # 工具模块
+│   ├── image_resize/       # 图片处理核心
+│   ├── sam_embeddings/     # 嵌入向量核心
+│   ├── onnx_export/        # ONNX导出核心
+│   └── sam_annotator/      # 标注核心（原salt模块）
+├── assets/                 # 资源文件
+├── dataset/                # 数据集目录（自动生成）
+├── weights/                # 模型权重目录
+├── requirements.txt        # 依赖列表
+└── README.md               # 说明文档
 ```
 
-**输出结构**：
+## 📊 数据集结构示例
+
+### 图片处理工具输出：
 ```
 dataset/ieee_apple_dataset/
 ├── train/
 │   ├── train_001/images/train_00001.png
+│   ├── train_002/images/train_00101.png
 │   └── ...
 └── val/
     ├── val_001/images/val_02001.png
     └── ...
 ```
 
-#### 2. 嵌入向量预计算（嵌入向量工具）
-- **传统模式**：处理单层 images 目录
-- **分组模式**：递归处理多层子文件夹
-
-**输出结构**：
+### 嵌入向量工具输出（分组模式）：
 ```
 dataset/ieee_apple_dataset/
-├── train_001/
-│   ├── images/train_00001.png
-│   └── embeddings/train_00001.npy
-└── ...
+├── train/
+│   ├── train_001/
+│   │   ├── images/train_00001.png
+│   │   └── embeddings/train_00001.npy
+│   └── ...
+└── val/
+    ├── val_001/
+    │   ├── images/val_02001.png
+    │   └── embeddings/val_02001.npy
+    └── ...
 ```
 
-#### 3. 模型导出（ONNX 导出工具）
-- 选择 PyTorch 模型权重
-- 设置输出路径和参数
-- 可选 8 位量化
+### 标注工具输出：
+- `annotations.json`：COCO格式的标注文件
 
-#### 4. 交互式标注（待集成）
-- 加载预计算的嵌入向量
-- 使用 ONNX 模型进行实时推理
-- 点选标注并保存结果
+## ⚠️ 注意事项
 
-## 📁 项目结构
+1. **模型兼容性**：确保使用的SAM模型权重与模型类型匹配（vit_h、vit_l、vit_b）
+2. **嵌入向量**：标注前需预计算嵌入向量，否则无法进行实时推理
+3. **ONNX模型**：导出ONNX模型时需要指定原始图像尺寸，如果数据集图片尺寸不一，建议使用统一的预处理尺寸
+4. **显存要求**：大模型（如vit_h）需要较多显存，如遇内存不足可尝试使用vit_b或vit_l模型
+5. **备份标注**：标注过程中建议定期使用Ctrl+S保存，程序也会每10张图片自动保存一次
 
-```
-PRTS-SAM/
-├── main.py                 # 程序入口
-├── ui/                     # 用户界面
-│   ├── main_window.py      # 主窗口
-│   ├── image_resize.py     # 图片处理界面
-│   ├── sam_embeddings.py   # 嵌入向量界面
-│   ├── onnx_export.py      # ONNX导出界面
-│   └── sam_annotator.py    # 标注界面（待集成）
-├── utils/                  # 工具模块
-│   ├── image_resize/       # 图片处理核心
-│   ├── sam_embeddings/     # 嵌入向量核心
-│   └── onnx_export/        # ONNX导出核心
-└── requirements.txt        # 依赖列表
-```
+## 🔧 配置说明
 
-## 📝 常见问题
-
-### Q: 需要多大的显存？
-- **图片处理**：不需要显存，纯 CPU 处理
-- **嵌入向量生成**：需要显存加载 SAM 模型（vit_h 约 6GB，vit_b 约 2GB）
-- **ONNX 导出**：需要显存加载模型进行转换
-- 话是这么说，但是，我的RTX 3050 + 12500H + 16GB RAM都能跑，不会真的有人跑不起来吧
-
-### Q: 支持哪些图片格式？
-- 支持所有常见格式：`.jpg`, `.jpeg`, `.png`, `.bmp`, `.tiff`, `.webp`
-
-### Q: 量化后的模型效果如何？
-- 量化后模型文件大小减少约 160 倍(2.4GB->15MB)
-- 推理速度可能提升(自信点，提升的非常大)
-- 精度略有损失，但通常可接受(没关系的，拿来生成掩膜而已)
-
-### Q: 为什么不用 SAM2？
-- 去看我仓库的另一个项目吧，那个是SAM2的
-- 这个是基于[salt](https://github.com/anuragxel/salt)和[SAM-Tool](https://github.com/zhouayi/SAM-Tool)重构的，加入了部分图形化支持
-- 用别怕，怕别用，但是不要相信我，我都不相信自己
-- 总之经常保存是对的
-
-## ⚠️ 免责声明
-
-- 🎓 **这是个人毕设工具**，功能够用就行，不追求完美
-- 🐛 **Bug？什么 Bug？** 那叫 特性！无限水在MC里不就是特性吗！
-- 📮 **Issue？** 看心情回复，大概率不会回
-- 🍴 **要新功能？** Fork 一个自己加吧，代码都给你了
-- 💥 **用出问题了？** 自己 Debug，我相信你可以的
-
-## 🤝 贡献
-
-欢迎 Fork！但 PR 我可能不会合并，因为：
-
-1. 我懒
-2. 毕设做完这项目就归档了
-3. 真的懒
-4. 我真的懒
-
+程序会自动保存用户设置到 `~/.prts_sam_config.json`，包括：
+- 最近使用的目录路径
+- 各工具的默认参数设置
+- 窗口布局和状态
 
 ## 🤝 致谢
 
-- [Meta SAM](https://github.com/facebookresearch/segment-anything) - 没有 SAM 就没有这个工具
-- [salt](https://github.com/anuragxel/salt) - 提供了交互式标注的灵感和基础代码
-- [SAM-Tool](https://github.com/zhouayi/SAM-Tool) - salt的本地化版本，本项目的基础，不喜欢gui的用这个，好用，爱用
-- [PyQt5](https://www.riverbankcomputing.com/software/pyqt/) - GUI 框架
-- 师兄 - 提供项目需求和指导
-- 我的电脑 - 承受了无数次"python main.py"和 CUDA 内存不足的折磨
+- [Meta Segment Anything](https://github.com/facebookresearch/segment-anything) - SAM模型基础
+- [SAM-Tool](https://github.com/zhouayi/SAM-Tool) - 提供了交互式标注的GUI实现
+- [salt](https://github.com/anuragxel/salt) - 标注工具的核心逻辑
+- [PyQt5](https://www.riverbankcomputing.com/software/pyqt/) - GUI框架
 
 ## 📄 License
 
-MIT License - 随便用，但用出问题别找我  
-还是那句话，用别怕，怕别用  
-记得常保存
-
-## 🙏 使用建议
-
-1. **数据预处理很重要**：统一图片尺寸和格式能显著提升后续处理效率
-2. **嵌入向量预计算**：标注前先批量生成嵌入向量，节省实时计算时间
-3. **模型量化权衡**：如果显存紧张，使用量化模型；如果追求精度，用原版模型
-4. **常保存配置**：程序会自动保存设置，但手动保存预设更保险
+MIT License - 随便用，但用出问题别找我
 
 ---
 
-**如果这个工具帮到了你，给个 Star ⭐ 呗（虽然我可能不会看）**
+**如果这个工具帮到了你，给个 Star ⭐ 呗**
 
-> **最后更新**：2026年1月10日
+> **最后更新**：2026年1月6日
 > 
-> **当前状态**：图片处理 ✓ | 嵌入向量 ✓ | ONNX导出 ✓ | SAM标注 ⏳
+> **当前版本**：v1.0.0
 > 
-> **下一目标**：集成交互式标注功能，完成完整的 SAM 工具链
+> **核心功能**：图片处理 ✓ | 嵌入向量 ✓ | ONNX导出 ✓ | SAM标注 ✓
