@@ -73,14 +73,14 @@
 conda env create -f environment.yml -n myenv
 conda activate myenv
 
-2.安装segment_anything
+# 2.安装segment_anything
 mkdir your_ws
 cd your_ws
 git clone https://github.com/facebookresearch/segment-anything.git
 cd segment-anything
 pip install -e .
 
-# 2. 克隆本项目
+# 3. 克隆本项目
 cd your_ws
 git clone https://github.com/你的用户名/PRTS-SAM.git
 cd PRTS-SAM
