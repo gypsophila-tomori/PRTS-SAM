@@ -50,13 +50,13 @@
 - 完整的快捷键支持
 
 ### 界面展示
-![imazge_resize](asset\image_resize.png)
+![imazge_resize](asset/image_resize.png)
 
-![embedding](asset\embedding.png)
+![embedding](asset/embedding.png)
 
-![onnx_explorer](asset\onnx_explorer.png)
+![onnx_explorer](asset/onnx_explorer.png)
 
-![sam_annotator](asset\sam_annotator.png)
+![sam_annotator](asset/sam_annotator.png)
 
 ## 🛠️ 安装
 
